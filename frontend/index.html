@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Video Transcribing Tool</title>
+    <!-- Import Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #transcribedText {
+            overflow: scroll;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-6">
+                <h2>Preview Video</h2>
+                <video id="videoPreview" controls class="w-100"></video>
+                <h2 class="mt-4">Upload Video</h2>
+                <input type="file" id="videoUpload" class="form-control" />
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div>
+
+
+                </div>
+                <button id="transcribeButton" type="button" class="btn btn-primary mt-2">Transcribe</button>
+            </div>
+            <div class="col-lg-6">
+                <h2>Transcribed Text</h2>
+                <div id="transcribedText" class="border border-primary h-100"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- This is used to make API calls to our backend server -->
+
+    <!-- Custom JavaScript for logic of application-->
+    <script>
+        const videoUpload = document.getElementById("videoUpload");
+        const videoPreview = document.getElementById("videoPreview");
+        const transcribeButton = document.getElementById("transcribeButton");
+        const transcribedText = document.getElementById("transcribedText");
+
+        let selectedFile;
+
+        // event handler to the file component change event
+        videoUpload.addEventListener("change", function(e) {
+
+            // if file is selected that is this code is true
+            if (e.target.files && e.target.files.length > 0) {
+
+                selectedFile = e.target.files[0];
+                let selectedVideo = URL.createObjectURL(selectedFile);
+
+                videoPreview.src = selectedVideo
+
+            }
+
+
+        })
+
+        async function transcribeVideo() {
+
+            let formData = new FormData();
+
+            formData.append("file", selectedFile)
+
+            try {
+                let response = await axios.post("http://localhost:1300", formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                })
+
+
+                if (respone.data) {
+                    displayTranscription(response);
+                } else {
+                    console.error("Error receiving transcription:", response);
+                    alert("An error occurred while transcribing the video.");
+                }
+
+            } catch (e) {
+                console.log(error);
+                console.error("Error transcribing video:", error);
+                alert("Video Transcription Failed");
+
+            } finally {
+                transcribeButton.disabled = false;
+            }
+
+
+        }
+
+        transcribeButton.addEventListener("click", transcribeVideo);
+
+        function displayTranscription(response) {
+            transcriberedText.innerHTML = response.data.text; // text property is where our transcription result is stored
+        }
+    </script>
+</body>
+<!--   http://172.23.128.1:8080
+  http://192.168.11.1:8080 -->
+
+</html>
+
+<!--  building backend api that will process our transcription-->
+<!-- This API will treat as middleman between our client and the API exposed by the AI model that will be doin the transcription operation-->
